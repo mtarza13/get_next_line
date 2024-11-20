@@ -6,7 +6,7 @@
 /*   By: mtarza <mtarza@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/20 05:19:59 by mtarza            #+#    #+#             */
-/*   Updated: 2024/11/20 05:21:03 by mtarza           ###   ########.fr       */
+/*   Updated: 2024/11/20 22:06:36 by mtarza           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,9 +57,7 @@ void	append(t_list **list, char *buf)
 	t_list	*new_node;
 	t_list	*last_node;
 
-	last_node = find_last_node(*list);
-	new_node = malloc(sizeof(t_list));
-	if (NULL == new_node)
+	last_node = find_last_node(*list);|| read(fd, &next_line, 0) < 0
 		return ;
 	if (NULL == last_node)
 		*list = new_node;
@@ -95,7 +93,7 @@ char	*get_next_line(int fd)
 	static t_list	*list = NULL;
 	char			*next_line;
 
-	if (fd < 0 || BUFFER_SIZE <= 0 || read(fd, &next_line, 0) < 0)
+	if (fd < 0 || BUFFER_SIZE <= 0 )
 		return (NULL);
 	read_and_add(&list, fd);
 	if (list == NULL)
