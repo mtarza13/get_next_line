@@ -5,8 +5,8 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: mtarza <marvin@42.fr>                      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/11/20 05:19:48 by mtarza            #+#    #+#             */
-/*   Updated: 2024/11/20 05:31:30 by mtarza           ###   ########.fr       */
+/*   Created: 2024/11/23 08:44:46 by mtarza            #+#    #+#             */
+/*   Updated: 2024/11/23 08:44:48 by mtarza           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,32 +14,37 @@
 # define GET_NEXT_LINE_BONUS_H
 
 # ifndef BUFFER_SIZE
-#  define BUFFER_SIZE 10
+#  define BUFFER_SIZE 42
 # endif
 
-# include <fcntl.h>
+# if BUFFER_SIZE < 0
+#  undef BUFFER_SIZE
+#  define BUFFER_SIZE 0
+# endif
+
+# ifndef FDS
+#  define FDS 1024
+# endif
+
 # include <stdlib.h>
 # include <unistd.h>
 
-# if BUFFER_SIZE <= 0
-#  undef BUFFER_SIZE
-#  define BUFFER_SIZE 10
-# endif
-
 typedef struct s_list
 {
-	char			*str_buf;
+	char			*data;
 	struct s_list	*next;
-}				t_list;
+}					t_list;
 
-int		found_newline(t_list *list);
-t_list	*find_last_node(t_list *list);
-char	*extract_line(t_list *list);
-void	copy_str(t_list *list, char *str);
-int		len_to_newline(t_list *list);
-void	clean_node(t_list **list);
-char	*get_next_line(int fd);
-void	free_node(t_list **list, t_list *clean_node, char *buf);
-void	read_and_add(t_list **list, int fd);
+t_list				*ft_lstnew(char *data);
+void				ft_lstclean_up(struct s_list **list,
+						struct s_list *new_node, char *new_data);
+void				ft_lstadd_back(struct s_list **lst, struct s_list *new);
+char				*ft_strdup(const char *s);
+char				*found_newline(struct s_list *list);
+void				add_line_to_list(struct s_list **list, int fd);
+char				*construct_line(struct s_list *list);
+int					get_line_length(struct s_list *list);
+void				next_line(struct s_list **list);
+char				*get_next_line(int fd);
 
 #endif

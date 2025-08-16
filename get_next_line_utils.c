@@ -3,115 +3,111 @@
 /*                                                        :::      ::::::::   */
 /*   get_next_line_utils.c                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mtarza <mtarza@student.42.fr>              +#+  +:+       +#+        */
+/*   By: mtarza <marvin@42.fr>                      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/11/20 05:20:43 by mtarza            #+#    #+#             */
-/*   Updated: 2024/11/20 05:21:06 by mtarza           ###   ########.fr       */
+/*   Created: 2024/11/23 08:45:15 by mtarza            #+#    #+#             */
+/*   Updated: 2024/11/23 08:49:03 by mtarza           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 
-int	found_newline(t_list *list)
+char	*ft_strdup(const char *s)
 {
-	int	i;
+	char	*copy;
+	int		i;
 
-	if (NULL == list)
-		return (0);
-	while (list)
-	{
-		i = 0;
-		while (list->str_buf[i] && i < BUFFER_SIZE)
-		{
-			if (list->str_buf[i] == '\n')
-				return (1);
-			++i;
-		}
-		list = list->next;
-	}
-	return (0);
-}
-
-t_list	*find_last_node(t_list *list)
-{
-	if (NULL == list)
+	if (!s)
 		return (NULL);
-	while (list->next)
-		list = list->next;
-	return (list);
-}
-
-void	copy_str(t_list *list, char *str)
-{
-	int	i;
-	int	k;
-
-	if (NULL == list)
-		return ;
-	k = 0;
-	while (list)
+	i = 0;
+	while (s[i])
+		i++;
+	copy = malloc(i + 1);
+	if (copy == NULL)
+		return (NULL);
+	i = 0;
+	while (s[i])
 	{
-		i = 0;
-		while (list->str_buf[i])
-		{
-			if (list->str_buf[i] == '\n')
-			{
-				str[k++] = '\n';
-				str[k] = '\0';
-				return ;
-			}
-			str[k++] = list->str_buf[i++];
-		}
-		list = list->next;
+		copy[i] = s[i];
+		i++;
 	}
-	str[k] = '\0';
+	copy[i] = '\0';
+	return (copy);
 }
 
-int	len_to_newline(t_list *list)
-{
-	int	i;
-	int	len;
-
-	if (NULL == list)
-		return (0);
-	len = 0;
-	while (list)
-	{
-		i = 0;
-		while (list->str_buf[i])
-		{
-			if (list->str_buf[i] == '\n')
-			{
-				++len;
-				return (len);
-			}
-			++i;
-			++len;
-		}
-		list = list->next;
-	}
-	return (len);
-}
-
-void	free_node(t_list **list, t_list *clean_node, char *buf)
+void	ft_lstclean_up(struct s_list **list, t_list *new_node, char *new_data)
 {
 	t_list	*tmp;
 
-	if (NULL == *list)
+	if (*list == NULL)
 		return ;
 	while (*list)
 	{
 		tmp = (*list)->next;
-		free((*list)->str_buf);
+		free((*list)->data);
 		free(*list);
 		*list = tmp;
 	}
 	*list = NULL;
-	if (clean_node->str_buf[0])
-		*list = clean_node;
+	if (new_node->data[0])
+		*list = new_node;
 	else
 	{
-		free(buf);
-		free(clean_node);
+		free(new_data);
+		free(new_node);
 	}
+}
+
+struct s_list	*ft_lstnew(char *data)
+{
+	t_list	*new_node;
+
+	new_node = (struct s_list *)malloc(sizeof(struct s_list));
+	if (!new_node)
+		return (NULL);
+	new_node->data = ft_strdup(data);
+	if (!new_node->data)
+	{
+		free(new_node);
+		return (NULL);
+	}
+	new_node->next = NULL;
+	return (new_node);
+}
+
+void	ft_lstadd_back(struct s_list **lst, t_list *new)
+{
+	t_list	*current;
+
+	if (!*lst)
+		*lst = new;
+	else
+	{
+		current = *lst;
+		while (current->next)
+			current = current->next;
+		current->next = new;
+	}
+}
+
+char	*found_newline(struct s_list *list)
+{
+	t_list	*current;
+	char	*ptr;
+
+	current = list;
+	if (!current)
+		return (NULL);
+	while (current->next)
+		current = current->next;
+	if (!current->data)
+		return (NULL);
+	ptr = current->data;
+	while (*ptr != '\0')
+	{
+		if (*ptr == '\n')
+			return (ptr);
+		ptr++;
+	}
+	return (NULL);
 }

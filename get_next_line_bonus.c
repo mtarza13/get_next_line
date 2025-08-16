@@ -3,104 +3,127 @@
 /*                                                        :::      ::::::::   */
 /*   get_next_line_bonus.c                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mtarza <mtarza@student.42.fr>              +#+  +:+       +#+        */
+/*   By: mtarza <marvin@42.fr>                      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/11/20 05:19:29 by mtarza            #+#    #+#             */
-/*   Updated: 2024/11/20 22:06:48 by mtarza           ###   ########.fr       */
+/*   Created: 2024/11/23 08:44:14 by mtarza            #+#    #+#             */
+/*   Updated: 2024/11/23 08:47:46 by mtarza           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line_bonus.h"
 
-void	clean_node(t_list **list)
+void	add_line_to_list(struct s_list **list, int fd)
 {
-	t_list	*last_node;
-	t_list	*clean_node;
-	int		i;
-	int		k;
-	char	*buf;
+	ssize_t	bytes_read;
+	char	*buffer;
 
-	buf = malloc(BUFFER_SIZE + 1);
-	clean_node = malloc(sizeof(t_list));
-	if (NULL == buf || NULL == clean_node)
-		return ;
-	last_node = find_last_node(*list);
-	i = 0;
-	k = 0;
-	while (last_node->str_buf[i] && last_node->str_buf[i] != '\n')
-		++i;
-	while (last_node->str_buf[i] && last_node->str_buf[++i])
-		buf[k++] = last_node->str_buf[i];
-	buf[k] = '\0';
-	clean_node->str_buf = buf;
-	clean_node->next = NULL;
-	free_node(list, clean_node, buf);
-}
-
-char	*extract_line(t_list *list)
-{
-	int		str_len;
-	char	*next_str;
-
-	if (NULL == list)
-		return (NULL);
-	str_len = len_to_newline(list);
-	next_str = malloc(str_len + 1);
-	if (NULL == next_str)
-		return (NULL);
-	copy_str(list, next_str);
-	return (next_str);
-}
-
-void	append(t_list **list, char *buf, int fd)
-{
-	t_list	*new_node;
-	t_list	*last_node;
-
-	last_node = find_last_node(list[fd]);
-	new_node = malloc(sizeof(t_list));
-	if (NULL == new_node)
-		return ;
-	if (NULL == last_node)
-		list[fd] = new_node;
-	else
-		last_node->next = new_node;
-	new_node->str_buf = buf;
-	new_node->next = NULL;
-}
-
-void	read_and_add(t_list **list, int fd)
-{
-	int		char_read;
-	char	*buf;
-
-	while (!found_newline(list[fd]))
+	while (!found_newline(*list))
 	{
-		buf = malloc(BUFFER_SIZE + 1);
-		if (NULL == buf)
+		buffer = (char *)malloc(BUFFER_SIZE + 1);
+		if (buffer == NULL)
 			return ;
-		char_read = read(fd, buf, BUFFER_SIZE);
-		if (!char_read)
+		bytes_read = read(fd, buffer, BUFFER_SIZE);
+		if (bytes_read <= 0)
 		{
-			free(buf);
+			free(buffer);
 			return ;
 		}
-		buf[char_read] = '\0';
-		append(list, buf, fd);
+		buffer[bytes_read] = '\0';
+		ft_lstadd_back(list, ft_lstnew(buffer));
+		free(buffer);
 	}
+}
+
+int	get_line_length(struct s_list *list)
+{
+	struct s_list	*current;
+	int				line_count;
+	char			*data;
+
+	current = list;
+	line_count = 0;
+	while (current)
+	{
+		data = current->data;
+		while (*data)
+		{
+			line_count++;
+			if (*data == '\n')
+				break ;
+			data++;
+		}
+		current = current->next;
+	}
+	return (line_count);
+}
+
+char	*construct_line(struct s_list *list)
+{
+	struct s_list	*current;
+	char			*line;
+	char			*ptr;
+	char			*data;
+
+	line = (char *)malloc((get_line_length(list) + 1) * sizeof(char));
+	if (!line)
+		return (NULL);
+	ptr = line;
+	current = list;
+	while (current)
+	{
+		data = current->data;
+		while (*data && *data != '\n')
+			*ptr++ = *data++;
+		if (*data == '\n')
+			*ptr++ = *data++;
+		current = current->next;
+	}
+	*ptr = '\0';
+	return (line);
+}
+
+void	next_line(struct s_list **list)
+{
+	struct s_list	*last_node;
+	struct s_list	*new_node;
+	char			*new_data;
+	int				i;
+	int				j;
+
+	i = 0;
+	j = 0;
+	new_data = malloc(BUFFER_SIZE + 1);
+	new_node = malloc(sizeof(struct s_list));
+	if (new_node == NULL || new_data == NULL)
+		return ;
+	last_node = *list;
+	if (last_node == NULL)
+		return ;
+	while (last_node->next)
+		last_node = last_node->next;
+	while (last_node->data[i] && last_node->data[i] != '\n')
+		++i;
+	while (last_node->data[i] && last_node->data[++i])
+		new_data[j++] = last_node->data[i];
+	new_data[j] = '\0';
+	new_node->data = new_data;
+	new_node->next = NULL;
+	ft_lstclean_up(list, new_node, new_data);
 }
 
 char	*get_next_line(int fd)
 {
-	static t_list	*list[1024];
-	char			*next_line;
+	static struct s_list	*list[FDS];
+	char					*line;
 
-	if (fd < 0 || fd > 1024 || BUFFER_SIZE <= 0)
+	if (fd < 0 || BUFFER_SIZE <= 0)
 		return (NULL);
-	read_and_add(list, fd);
-	if (list[fd] == NULL)
+	add_line_to_list(&list[fd], fd);
+	if (!list[fd])
 		return (NULL);
-	next_line = extract_line(list[fd]);
-	clean_node(&list[fd]);
-	return (next_line);
+	line = construct_line(list[fd]);
+	if (!line)
+		return (NULL);
+	next_line(&list[fd]);
+	return (line);
 }

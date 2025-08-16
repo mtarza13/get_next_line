@@ -1,4 +1,0 @@
-Let’s not waste time. Come on, jump straight into writing codei line_1.
- Time to time let’s go back to read the subject line_2.
- Also, don’t think too much about the variable names;line_3,
- you will understand why and what in the next chapters line_4.
